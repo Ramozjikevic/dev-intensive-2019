@@ -67,7 +67,7 @@ class MainActivity : AppCompatActivity(),View.OnClickListener {
     }
 
     fun send() {
-        val (phrase, color ) = benderObj.listAnswer(messageEt.text.toString().toLowerCase())
+        val (phrase, color ) = benderObj.listenAnswer(messageEt.text.toString().toLowerCase())
         messageEt.setText("")
         val (r,g,b) = color
         benderImage.setColorFilter(Color.rgb(r,g,b), PorterDuff.Mode.MULTIPLY)
