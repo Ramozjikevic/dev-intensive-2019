@@ -108,7 +108,12 @@ class Bender(var status: Status = Status.NORMAL, var question: Question = Questi
         abstract fun nextQuestion(): Question
 
         fun isUpperCase(value: String) = value.first().isUpperCase()
-        fun isOnlyNumber(value: String) = value.matches(Regex("""\d+"""))
+        fun isOnlyNumber(value: String): Boolean {
+            for (c in value.toCharArray()) {
+                if (!c.isDigit()) return true
+            }
+            return false
+        }
         fun isValidSerialNumber(value: String) = isOnlyNumber(value) && value.count() == 7
     }
 
