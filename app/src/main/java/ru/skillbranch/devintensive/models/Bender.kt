@@ -23,7 +23,7 @@ class Bender(var status: Status = Status.NORMAL, var question: Question = Questi
     }
 
     fun wrongAnswer(answer: String): Pair<String, Triple<Int, Int, Int>> {
-        return if (answer.isBlank() || question.validate(answer) != null) {
+        return if (answer.isNotBlank() && question.validate(answer) != null) {
             "${question.notValidMessage}\n${question.question}" to status.color
         } else {
             status = status.nextStatus()
