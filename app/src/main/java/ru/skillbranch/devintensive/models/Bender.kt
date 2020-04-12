@@ -1,120 +1,123 @@
 package ru.skillbranch.devintensive.models
 
-class Bender(var status: Status = Status.NORMAL, var question: Question = Question.NAME) {
-
-    fun askQuestion(): String = when (question) {
-        Question.NAME -> Question.NAME.question
-        Question.PROFESSION -> Question.PROFESSION.question
-        Question.MATERIAL -> Question.MATERIAL.question
-        Question.BDAY -> Question.BDAY.question
-        Question.SERIAL -> Question.SERIAL.question
-        Question.IDLE -> Question.IDLE.question
-    }
-
-    fun listenAnswer(answer: String): Pair<String, Triple<Int, Int, Int>> {
-        if (question.answer.isEmpty()) return question.question to status.color
-
-        return if (question.answer.contains(answer)) {
-            question = question.nextQuestion()
-            "Отлично - ты справился\n${question.question}" to status.color
-        } else {
-            wrongAnswer(answer)
+    class Bender(var status: Status = Status.NORMAL, var question: Question = Question.NAME) {
+        fun askQuestion(): String = when (question) {
+            Question.NAME -> Question.NAME.question
+            Question.PROFESSION -> Question.PROFESSION.question
+            Question.MATERIAL -> Question.MATERIAL.question
+            Question.BDAY -> Question.BDAY.question
+            Question.SERIAL -> Question.SERIAL.question
+            Question.IDLE -> Question.IDLE.question
         }
-    }
 
-    fun wrongAnswer(answer: String): Pair<String, Triple<Int, Int, Int>> {
-        return if (answer.isNotBlank() && question.validate(answer) != null) {
-            "${question.notValidMessage}\n${question.question}" to status.color
-        } else {
-            status = status.nextStatus()
-            if (status != Status.NORMAL) {
-                "Это неправильный ответ\n${question.question}" to status.color
+        fun listenAnswer(answer: String): Pair<String, Triple<Int, Int, Int>> {
+            if (question.answers.isEmpty()) return question.question to status.color
+            return if (question.answers.contains(answer)) {
+                question = question.nextQuestion()
+                "Отлично - ты справился\n${question.question}" to status.color
             } else {
-                "Это неправильный ответ. Давай все по новой\n${Question.NAME.question}" to status.color
+                badAnswer(answer)
             }
         }
-    }
 
-    enum class Status(val color: Triple<Int, Int, Int>) {
-        NORMAL(Triple(255, 255, 255)),
-        WARNING(Triple(255, 120, 0)),
-        DANGER(Triple(255, 60, 60)),
-        CRITICAL(Triple(255, 0, 0));
+        private fun badAnswer(answer: String): Pair<String, Triple<Int, Int, Int>> {
+            return if (question.validateValue(answer)) {
+                val result = question.validateMessage() +
+                        (if (question.validateMessage().isEmpty()) "" else "\n") +
+                        question.question
 
-        fun nextStatus(): Status {
-            return if (this.ordinal < values().lastIndex) {
-                values()[this.ordinal + 1]
+                result to status.color
             } else {
-                values()[0]
+                val result = "Это неправильный ответ" +
+                        (if (status == Status.CRITICAL) ". Давай все по новой" else "") +
+                        "\n${question.question}"
+                status = status.nextStatus()
+                result to status.color
             }
         }
-    }
 
-    enum class Question(
-        val question: String,
-        val answer: List<String>,
-        val notValidMessage: String
-    ) {
-        NAME(
-            "Как меня зовут?",
-            listOf("Бендер", "Bender"),
-            "Имя должно начинаться с заглавной буквы"
-        ) {
-            override fun nextQuestion(): Question = PROFESSION
-            override fun validate(value: String): String? = if (!isUpperCase(value)) notValidMessage  else null
-        },
-        PROFESSION(
-            "Назови мою профессию?",
-            listOf("сгибальщик", "bender"),
-            "Профессия должна начинаться со строчной буквы"
-        ) {
-            override fun nextQuestion(): Question = MATERIAL
-            override fun validate(value: String): String? =
-                if (isUpperCase(value)) notValidMessage else null
-        },
-        MATERIAL(
-            "Из чего я сделан?",
-            listOf("металл", "дерево", "metal", "iron", "wood"),
-            "Материал не должен содержать цифр"
-        ) {
-            override fun nextQuestion(): Question = BDAY
-            override fun validate(value: String) =
-                if (isOnlyNumber(value)) notValidMessage else null
-        },
-        BDAY(
-            "Когда меня создали?",
-            listOf("2993"),
-            "Год моего рождения должен содержать только цифры"
-        ) {
-            override fun nextQuestion(): Question = SERIAL
-            override fun validate(value: String): String? =
-                if (!isOnlyNumber(value)) notValidMessage else null
-        },
-        SERIAL(
-            "Мой серийный номер?",
-            listOf("2716057"),
-            "Серийный номер содержит только цифры, и их 7"
-        ) {
-            override fun nextQuestion(): Question = IDLE
-            override fun validate(value: String): String? =
-                if (!isValidSerialNumber(value)) notValidMessage else null
-        },
-        IDLE("На этом все, вопросов больше нет", listOf(), "") {
-            override fun nextQuestion(): Question = IDLE
-            override fun validate(value: String): String? = null
-        };
+        enum class Status(val color: Triple<Int, Int, Int>) {
+            NORMAL(Triple(255, 255, 255)),
+            WARNING(Triple(255, 120, 0)),
+            DANGER(Triple(255, 60, 60)),
+            CRITICAL(Triple(255, 0, 0));
 
-        abstract fun validate(value: String): String?
-        abstract fun nextQuestion(): Question
-
-        fun isUpperCase(value: String) = value.first().isUpperCase()
-        fun isOnlyNumber(value: String): Boolean {
-            for (c in value.toCharArray()) {
-                if (!c.isDigit()) return true
+            fun nextStatus(): Status {
+                return if (ordinal < values().lastIndex) {
+                    values()[ordinal + 1]
+                } else {
+                    values()[0]
+                }
             }
-            return false
         }
-        fun isValidSerialNumber(value: String) = isOnlyNumber(value) && value.count() == 7
-    }
 
+        enum class Question(val question: String, val answers: List<String>) {
+            NAME("Как меня зовут?", listOf("Бендер", "Bender")) {
+                override fun validateValue(value: String): Boolean {
+                    for (answer in answers) {
+                        if (answer.toLowerCase() == value) return true
+                    }
+                    return false
+                }
+
+                override fun validateMessage(): String = "Имя должно начинаться с заглавной буквы"
+
+                override fun nextQuestion(): Question = PROFESSION
+            },
+            PROFESSION("Назови мою профессию?", listOf("сгибальщик", "bender")) {
+                override fun validateValue(value: String): Boolean = answers.contains(value.toLowerCase())
+
+                override fun validateMessage(): String = "Профессия должна начинаться со строчной буквы"
+
+                override fun nextQuestion(): Question = MATERIAL
+            },
+            MATERIAL("Из чего я сделан?", listOf("металл", "дерево", "metal", "iron", "wood")) {
+                override fun validateValue(value: String): Boolean {
+                    for (c in value.toCharArray()) {
+                        if (c.isDigit()) return true
+                    }
+                    return false
+                }
+
+                override fun validateMessage(): String = "Материал не должен содержать цифр"
+
+                override fun nextQuestion(): Question = BDAY
+            },
+            BDAY("Когда меня создали?", listOf("2993")) {
+                override fun validateValue(value: String): Boolean {
+                    for (c in value.toCharArray()) {
+                        if (!c.isDigit()) return true
+                    }
+                    return false
+                }
+
+                override fun validateMessage(): String = "Год моего рождения должен содержать только цифры"
+
+                override fun nextQuestion(): Question = SERIAL
+            },
+            SERIAL("Мой серийный номер?", listOf("2716057")) {
+                override fun validateValue(value: String): Boolean {
+                    if (value.length != 7) return true
+                    for (c in value.toCharArray()) {
+                        if (!c.isDigit()) return true
+                    }
+                    return false
+                }
+
+                override fun validateMessage(): String = "Серийный номер содержит только цифры, и их 7"
+
+                override fun nextQuestion(): Question = IDLE
+            },
+            IDLE("На этом все, вопросов больше нет", listOf()) {
+                override fun validateValue(value: String): Boolean = true
+                override fun validateMessage(): String = ""
+                override fun nextQuestion(): Question = IDLE
+            };
+
+            abstract fun nextQuestion(): Question
+
+            abstract fun validateValue(value: String): Boolean
+
+            abstract fun validateMessage(): String
+        }
 }
