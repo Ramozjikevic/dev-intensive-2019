@@ -45,8 +45,6 @@ object PreferencesRepository {
             putValue(RATING to rating)
             putValue(RESPECT to respect)
         }
-
-
     }
 
 
@@ -62,6 +60,7 @@ object PreferencesRepository {
             is Float -> putFloat(key, value)
             else -> error("Only primitives types can be stored in Shared Preferences")
         }
+        apply()
     }
 
 
