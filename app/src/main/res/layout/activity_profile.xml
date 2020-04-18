@@ -252,6 +252,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginRight="@dimen/spacing_normal_16"
+            app:errorEnabled="true"
             android:layout_weight="1">
 
             <EditText

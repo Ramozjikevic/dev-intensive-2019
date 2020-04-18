@@ -39,3 +39,25 @@ fun String.stripHtml(): String {
 
     return resString
 }
+
+fun String.isRepositoryValid(): Boolean {
+    val x: MatchResult? =
+        Regex("^(?:https?://)?(?:www\\.)?(?:github\\.com/)([a-zA-Z_\\d-]+)$").find(this)
+
+    return if (x == null) false
+    else x.groupValues[1] !in arrayOf(
+        "enterprise",
+        "features",
+        "topics",
+        "collections",
+        "trending",
+        "events",
+        "marketplace",
+        "pricing",
+        "nonprofit",
+        "customer-stories",
+        "security",
+        "login",
+        "join"
+    )
+}

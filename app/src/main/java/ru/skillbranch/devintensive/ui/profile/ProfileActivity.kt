@@ -5,6 +5,8 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
@@ -12,6 +14,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import kotlinx.android.synthetic.main.activity_profile.*
 import ru.skillbranch.devintensive.R
+import ru.skillbranch.devintensive.extensions.isRepositoryValid
 import ru.skillbranch.devintensive.models.Profile
 import ru.skillbranch.devintensive.utils.Utils
 import ru.skillbranch.devintensive.viewmodels.ProfileViewModel
@@ -23,6 +26,7 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     var isEditMode = false
+    var isValidRepository = false
     lateinit var viewField: Map<String, TextView>
     private lateinit var viewModel: ProfileViewModel
 
@@ -60,12 +64,26 @@ class ProfileActivity : AppCompatActivity() {
             isEditMode = !isEditMode
             showCurrentMode(isEditMode)
         }
+
+        et_repository.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(editable: Editable) {
+                isValidRepository = editable.toString().isRepositoryValid() || editable.isBlank()
+                if (!isValidRepository) wr_repository.error = "Невалидный адрес репозитория"
+                else {wr_repository.error = null }
+            }
+
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+            }
+
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+            }
+        })
     }
 
     private fun initViewModel() {
         viewModel = ViewModelProviders.of(this).get(ProfileViewModel::class.java)
         viewModel.getProfileDate().observe(this, Observer { updateUI(it) })
-        viewModel.getTheme().observe(this, Observer { updateTheme(it)})
+        viewModel.getTheme().observe(this, Observer { updateTheme(it) })
     }
 
     private fun updateTheme(mode: Int) {
@@ -74,7 +92,7 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun updateUI(profile: Profile) {
         profile.toMap().also {
-            for((k,v) in viewField){
+            for ((k, v) in viewField) {
                 v.text = it[k].toString()
             }
         }
@@ -126,7 +144,7 @@ class ProfileActivity : AppCompatActivity() {
             firstName = et_first_name.text.toString(),
             lastName = et_last_name.text.toString(),
             about = et_about.text.toString(),
-            repository = et_repository.text.toString()
+            repository = if (isValidRepository) et_repository.text.toString() else ""
         ).apply {
             viewModel.saveProfileData(this)
         }
