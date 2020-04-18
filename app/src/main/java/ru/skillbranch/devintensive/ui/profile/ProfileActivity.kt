@@ -64,7 +64,7 @@ class ProfileActivity : AppCompatActivity() {
 
         et_repository.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(editable: Editable) {
-                isValidRepository = !editable.toString().isRepositoryValid() && editable.isEmpty()
+                isValidRepository = editable.isEmpty() || editable.toString().isRepositoryValid()
                 if (!isValidRepository) wr_repository.error = "Невалидный адрес репозитория"
                 else wr_repository.error = ""
             }
