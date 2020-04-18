@@ -21,10 +21,6 @@ import ru.skillbranch.devintensive.viewmodels.ProfileViewModel
 
 class ProfileActivity : AppCompatActivity() {
 
-    companion object {
-        const val IS_EDIT_MODE = "IS_EDIT_MODE"
-    }
-
     var isEditMode = false
     var isValidRepository = false
     lateinit var viewField: Map<String, TextView>
@@ -59,7 +55,8 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         btn_edit.setOnClickListener {
-
+            if (!isValidRepository) et_repository.text.clear()
+            wr_repository.error = null
             if (isEditMode) saveProfileInfo()
             isEditMode = !isEditMode
             showCurrentMode(isEditMode)
@@ -68,14 +65,7 @@ class ProfileActivity : AppCompatActivity() {
         et_repository.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(editable: Editable) {
                 isValidRepository = !editable.toString().isRepositoryValid() && editable.isEmpty()
-                if (!isValidRepository) {
-                    wr_repository.isErrorEnabled = true
-                    wr_repository.error = "Невалидный адрес репозитория"
-                }
-                else {
-                    wr_repository.isErrorEnabled = true
-                    wr_repository.error = ""
-                }
+                if (!isValidRepository) wr_repository.error = "Невалидный адрес репозитория"
             }
 
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
@@ -102,8 +92,6 @@ class ProfileActivity : AppCompatActivity() {
                 v.text = it[k].toString()
             }
         }
-        wr_repository.isErrorEnabled = true
-        wr_repository.error = ""
         iv_avatar.setInitials(Utils.toInitials(profile.firstName, profile.lastName))
     }
 
@@ -152,7 +140,7 @@ class ProfileActivity : AppCompatActivity() {
             firstName = et_first_name.text.toString(),
             lastName = et_last_name.text.toString(),
             about = et_about.text.toString(),
-            repository = if (isValidRepository) et_repository.text.toString() else ""
+            repository = et_repository.text.toString()
         ).apply {
             viewModel.saveProfileData(this)
         }
@@ -163,4 +151,7 @@ class ProfileActivity : AppCompatActivity() {
         outState.putBoolean(IS_EDIT_MODE, isEditMode)
     }
 
+    companion object {
+        const val IS_EDIT_MODE = "IS_EDIT_MODE"
+    }
 }
