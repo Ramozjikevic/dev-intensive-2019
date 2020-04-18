@@ -23,17 +23,18 @@ class CircleImageView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : ImageView(context, attrs, defStyleAttr) {
 
-    private val maskPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val viewRect = Rect()
-    private lateinit var resultBm: Bitmap
-    private lateinit var maskBm: Bitmap
-    private lateinit var srcBm: Bitmap
-
-
-    var borderWidth: Float = context.dpToPx(DEFAULT_BORDER_WIDTH)
+    private var borderWidth: Float = context.dpToPx(DEFAULT_BORDER_WIDTH)
     private var borderColor: Int = DEFAULT_BORDER_COLOR
-    private var initials: String = "??"
+
+    private val paintBorder = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        color = borderColor
+    }
+
+    val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE
+        textAlign = Paint.Align.CENTER
+    }
 
     init {
         if (attrs != null) {
@@ -88,22 +89,18 @@ class CircleImageView @JvmOverloads constructor(
             Bitmap.Config.ARGB_8888
         )
 
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        paint.textSize = layoutParams.height / 2f
-        paint.color = Color.WHITE
-        paint.textAlign = Paint.Align.CENTER
+        textPaint.textSize = layoutParams.height / 2f
 
         val canvas = Canvas(bitmap)
         canvas.drawColor(color.data)
 
         val textBounds = Rect()
-        paint.getTextBounds(initials, 0, initials.length, textBounds)
+        textPaint.getTextBounds(initials, 0, initials.length, textBounds)
 
-        canvas.drawText(initials, layoutParams.width / 2f, layoutParams.height / 2f + textBounds.height() / 2f, paint)
+        canvas.drawText(initials, layoutParams.width / 2f, layoutParams.height / 2f + textBounds.height() / 2f, textPaint)
 
         return bitmap
     }
-
 
     override fun onDraw(canvas: Canvas) {
         var bitmap = getBitmapFromDrawable() ?: return
@@ -112,7 +109,7 @@ class CircleImageView @JvmOverloads constructor(
         bitmap = makeCircleBitmap(bitmap)
 
         if (borderWidth > 0)
-            bitmap = createRoundBorderBitmap(bitmap, borderWidth.toInt(), borderColor)
+            bitmap = createRoundBorderBitmap(bitmap, borderWidth.toInt())
         canvas.drawBitmap(bitmap, 0f, 0f, null)
     }
 
@@ -167,13 +164,10 @@ class CircleImageView @JvmOverloads constructor(
 
     private fun createRoundBorderBitmap(
         bitmap: Bitmap,
-        borderWidth: Int,
-        borderColor: Int
+        borderWidth: Int
     ): Bitmap {
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        paint.style = Paint.Style.STROKE
-        paint.color = borderColor
-        paint.strokeWidth = borderWidth.toFloat()
+
+        paintBorder.strokeWidth = borderWidth.toFloat()
 
         val smallest = min(bitmap.width, bitmap.height)
         val canvas = Canvas(bitmap)
@@ -181,7 +175,7 @@ class CircleImageView @JvmOverloads constructor(
             smallest / 2F,
             smallest / 2F,
             smallest.toFloat() / 2F - borderWidth / 2,
-            paint
+            paintBorder
         )
 
         return bitmap
