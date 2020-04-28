@@ -3,6 +3,7 @@ package ru.skillbranch.devintensive.ui.main
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -40,9 +41,11 @@ class MainActivity : AppCompatActivity() {
             Snackbar.make(rv_chat_list, "Click on ${it.title}", Snackbar.LENGTH_LONG).show()
         }
         val divider = DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
-        val touchCallback = ChatItemTouchHelperCallback(chatAdapter) {
-            viewModel.addToArchive(it.id)
-            Snackbar.make(rv_chat_list, "Вы точно хотите добавить ${it.title} в архим", Snackbar.LENGTH_LONG).show()//Snackbar.setAction()
+        val touchCallback = ChatItemTouchHelperCallback(chatAdapter) { chatItem ->
+            viewModel.addToArchive(chatItem.id)
+            Snackbar.make(rv_chat_list, "Вы точно хотите добавить ${chatItem.title} в архим", Snackbar.LENGTH_LONG)
+                .setAction("Отмена") { viewModel.restoreFromArchive(chatItem.id) }
+                .show()
         }
 
         val touchHelper = ItemTouchHelper(touchCallback)
